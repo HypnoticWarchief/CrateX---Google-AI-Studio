@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PipelineStage } from '../types';
 import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
@@ -27,9 +28,9 @@ const Stepper: React.FC<StepperProps> = ({ currentStage, progress }) => {
     const isRollingBack = currentStage === PipelineStage.ROLLBACK;
 
     return (
-        <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl h-full overflow-y-auto">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <span className="text-blue-500">◆</span> Pipeline Stages
+        <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-xl h-full overflow-y-auto transition-colors duration-300">
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-6 flex items-center gap-2">
+                <span className="text-red-600">◆</span> Pipeline Stages
             </h3>
             
             <div className="space-y-6">
@@ -45,21 +46,21 @@ const Stepper: React.FC<StepperProps> = ({ currentStage, progress }) => {
                         <div key={stage} className={`flex items-center gap-4 ${status === 'pending' ? 'opacity-40' : 'opacity-100'}`}>
                             <div className="flex-shrink-0">
                                 {status === 'completed' ? (
-                                    <CheckCircle2 className="w-6 h-6 text-green-400" />
+                                    <CheckCircle2 className="w-6 h-6 text-green-500" />
                                 ) : status === 'active' ? (
-                                    <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                                    <Loader2 className="w-6 h-6 text-red-500 animate-spin" />
                                 ) : (
-                                    <Circle className="w-6 h-6 text-slate-500" />
+                                    <Circle className="w-6 h-6 text-zinc-300 dark:text-zinc-600" />
                                 )}
                             </div>
-                            <div className="flex flex-col">
-                                <span className={`text-sm font-medium ${status === 'active' ? 'text-blue-200' : 'text-slate-300'}`}>
+                            <div className="flex flex-col flex-1">
+                                <span className={`text-sm font-medium ${status === 'active' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-zinc-600 dark:text-zinc-300'}`}>
                                     {stage}
                                 </span>
                                 {status === 'active' && (
-                                    <div className="w-full bg-slate-700 h-1 mt-1 rounded-full overflow-hidden w-24">
+                                    <div className="w-24 bg-zinc-200 dark:bg-zinc-800 h-1 mt-1 rounded-full overflow-hidden">
                                         <div 
-                                            className="bg-blue-500 h-full transition-all duration-300"
+                                            className="bg-red-500 h-full transition-all duration-300"
                                             style={{ width: `${(progress % 10) * 10}%` }} 
                                         />
                                     </div>
