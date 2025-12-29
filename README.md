@@ -1,11 +1,54 @@
-<div align="center">
+# CrateX - AI Music Organizer
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+CrateX is a local-first web application for organizing DJ music libraries using Python, FastAPI, and React.
 
-  <h1>Built with AI Studio</h2>
+## Prerequisites
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+1.  **Python 3.10+**
+2.  **Node.js 18+**
+3.  **Google Gemini API Key** (Set as `GEMINI_API_KEY` in env)
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Installation
 
-</div>
+### 1. Backend (Python)
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Create a .env file
+echo "GEMINI_API_KEY=your_api_key_here" > .env
+
+# Run the server
+python main.py
+```
+
+The API will run at `http://localhost:8000`.
+
+### 2. Frontend (React)
+
+In a separate terminal:
+
+```bash
+# Install dependencies (assuming a standard create-react-app or vite setup)
+npm install
+
+# Start the dev server
+npm start
+```
+
+The UI will run at `http://localhost:3000` (or the port specified by your bundler).
+
+## Usage
+
+1.  Open the Web UI.
+2.  Enter the absolute path to your Music folder (e.g., `/Users/name/Music/Unsorted`).
+3.  Ensure "Dry Run" is selected for safety.
+4.  Click "Start Pipeline".
+5.  Watch the logs. If satisfied, switch to "Execute" and run again.
+
+## Safety
+
+-   **Dry Run Default**: No files are touched unless explicitly requested.
+-   **Rollback**: Use the emergency rollback button to undo file moves.
+-   **Local Processing**: No audio leaves your machine. Only metadata is sent to Gemini.
