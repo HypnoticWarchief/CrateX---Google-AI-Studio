@@ -520,11 +520,17 @@ export const askGeminiAgent = async (
         model: modelName,
         systemInstruction: systemInstruction,
         tools: [{ functionDeclarations: tools as any }]
-    });
+    } as any); // Cast to any to bypass strict type check for beta features if version is lagging
 
     const result = await model.generateContent(prompt);
     const response = result.response;
-    const toolCalls = response.functionCalls();
+    
+    // Safety check for functionCalls existence (it depends on version)
+    // Using explicit method check or property
+    let toolCalls: any[] | undefined;
+    if (typeof response.functionCalls === 'function') {
+        toolCalls = response.functionCalls();
+    }
 
     if (toolCalls && toolCalls.length > 0) {
         for (const call of toolCalls) {
@@ -535,8 +541,10 @@ export const askGeminiAgent = async (
                 const searchRes = await askGemini(call.args.query as string, 'search');
                 let finalText = searchRes.text() || `Here is what I found for "${call.args.query}"`;
                 
-                // Append sources if available (Structure might differ in stable SDK, simplified here)
-                const chunks = searchRes.candidates?.[0]?.groundingMetadata?.groundingChunks;
+                // Grounding metadata extraction (checking for candidates)
+                const candidate = searchRes.candidates?.[0];
+                const chunks = (candidate as any)?.groundingMetadata?.groundingChunks;
+                
                 if (chunks) {
                     finalText += "\n\nSources:";
                     chunks.forEach((c: any) => {
@@ -584,14 +592,13 @@ export const askGemini = async (prompt: string, mode: 'fast' | 'think' | 'search
     const genAI = new GoogleGenerativeAI(apiKey);
 
     if (mode === 'think') {
-        // 'thinkingConfig' might be experimental in stable SDK, falling back to std generation or beta if available
-        // Using standard for safety in this refactor unless explicitly supported
-        return await genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' }).generateContent(prompt).then(r => r.response);
+        // Cast as any to avoid type errors if thinkingConfig is not in stable types yet
+        return await genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' } as any).generateContent(prompt).then(r => r.response);
     } else if (mode === 'search') {
         return await genAI.getGenerativeModel({ 
             model: 'gemini-3-flash-preview',
             tools: [{ googleSearch: {} }] as any 
-        }).generateContent(prompt).then(r => r.response);
+        } as any).generateContent(prompt).then(r => r.response);
     } else {
         return await genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' }).generateContent(prompt).then(r => r.response);
     }
