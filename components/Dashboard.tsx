@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Play, FolderOpen, RotateCcw, AlertTriangle, Wifi, WifiOff, Activity, Settings, Disc, Smartphone, X, Zap, History, Sun, Moon, Database, Info, FileWarning, Music2, CheckCircle2, Menu } from 'lucide-react';
+import { Play, FolderOpen, RotateCcw, AlertTriangle, Wifi, WifiOff, Activity, Settings, Disc, Smartphone, X, Zap, History, Sun, Moon, Database, Info, FileWarning, Music2, CheckCircle2, Menu, Bell, Check } from 'lucide-react';
 import { getStatus, runAnalysis, commitChanges, triggerRollback, getConfig, isSimulated, resetPipeline } from '../services/api';
 import { PipelineStatus, PipelineStage, DryRunConfig } from '../types';
 import Stepper from './Stepper';
@@ -57,6 +57,9 @@ const Dashboard: React.FC = () => {
     
     const [showMobileWarning, setShowMobileWarning] = useState(false);
 
+    // Notifications
+    const [notifications, setNotifications] = useState<{id: string, message: string, type: 'success' | 'info'}[]>([]);
+
     useEffect(() => {
         getConfig().then(cfg => setPath(cfg.cwd || "/Volumes/Music/Unsorted")).catch(e => {});
         const checkScreen = () => {
@@ -68,19 +71,41 @@ const Dashboard: React.FC = () => {
         return () => window.removeEventListener('resize', checkScreen);
     }, []);
 
+    const [prevStage, setPrevStage] = useState(PipelineStage.IDLE);
+
     useEffect(() => {
         const fetchStatus = async () => {
             try {
                 const data = await getStatus();
                 setStatus(data);
                 setBackendOnline(!isSimulated());
+
+                // Check for transition to COMPLETED to trigger notification
+                if (data.current_stage === PipelineStage.COMPLETED && prevStage !== PipelineStage.COMPLETED) {
+                    const isExecution = data.proposed_changes?.some(op => op.status === 'moved');
+                    if (isExecution) {
+                        addNotification("Library Sort Complete!", 'success');
+                    } else {
+                        addNotification("Dry Run Analysis Complete", 'success');
+                    }
+                }
+                setPrevStage(data.current_stage);
+
             } catch (e) {
                 setBackendOnline(false);
             }
         };
         const interval = setInterval(fetchStatus, 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [prevStage]); 
+
+    const addNotification = (message: string, type: 'success' | 'info' = 'info') => {
+        const id = Date.now().toString();
+        setNotifications(prev => [...prev, { id, message, type }]);
+        setTimeout(() => {
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        }, 5000);
+    };
 
     // Opens configuration modal instead of running immediately
     const handleAnalyzeClick = () => {
@@ -91,7 +116,10 @@ const Dashboard: React.FC = () => {
     const executeDryRun = async (config: DryRunConfig) => {
         setIsDryRunConfigOpen(false);
         setError(null);
-        try { await runAnalysis(path, config); } 
+        try { 
+            await runAnalysis(path, config);
+            addNotification("Analysis Started", 'info');
+        } 
         catch (err: any) { setError(err.message); }
     };
 
@@ -292,6 +320,19 @@ const Dashboard: React.FC = () => {
                 changes={status.proposed_changes || []}
                 isExecuting={isRunning && status.current_stage !== PipelineStage.COMPLETED}
             />
+
+            {/* Notification Toasts */}
+            <div className="fixed top-6 right-6 z-[60] flex flex-col gap-2 pointer-events-none">
+                {notifications.map(n => (
+                    <div key={n.id} className="pointer-events-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-lg p-3 flex items-center gap-3 animate-in slide-in-from-right-10 fade-in duration-300">
+                        {n.type === 'success' 
+                            ? <div className="bg-green-100 dark:bg-green-900/30 text-green-600 p-1.5 rounded-md"><Check className="w-4 h-4" /></div>
+                            : <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 p-1.5 rounded-md"><Info className="w-4 h-4" /></div>
+                        }
+                        <span className="text-sm font-bold text-zinc-900 dark:text-white pr-2">{n.message}</span>
+                    </div>
+                ))}
+            </div>
             
             {showMobileWarning && (
                 <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50 bg-zinc-900/95 backdrop-blur-md border border-red-500/30 p-4 rounded-xl shadow-2xl flex items-start gap-4 animate-in slide-in-from-bottom-10">
@@ -326,6 +367,16 @@ const Dashboard: React.FC = () => {
                         {/* Right Actions */}
                         <div className="flex items-center gap-3 md:gap-4">
                             
+                            {/* Notification Bell */}
+                            <button className="relative p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+                                <Bell className="w-5 h-5" />
+                                {notifications.length > 0 && (
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-zinc-900 animate-pulse" />
+                                )}
+                            </button>
+
+                            <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-800 mx-1 hidden sm:block"></div>
+
                             {/* Status Indicator */}
                             <div className={`relative group flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all duration-300 cursor-help ${backendOnline 
                                 ? 'bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10' 

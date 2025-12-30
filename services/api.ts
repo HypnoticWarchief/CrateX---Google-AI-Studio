@@ -46,6 +46,12 @@ let simStatus: PipelineStatus = {
 let simulationActive = false;
 let currentPath = "/Volumes/Music/Unsorted";
 
+// --- HELPERS ---
+const getTimestamp = () => {
+    // Returns [HH:MM:SS] - Exactly 10 characters
+    return `[${new Date().toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]`;
+};
+
 // --- HISTORY HELPERS ---
 export const getHistory = (): HistoryItem[] => {
     try {
@@ -78,14 +84,14 @@ export const rollbackHistoryId = async (id: string): Promise<void> => {
     // Simulate Rollback Process
     simStatus.is_running = true;
     simStatus.current_stage = PipelineStage.ROLLBACK;
-    simStatus.logs.push(`[${new Date().toLocaleTimeString()}] INITIATING HISTORY ROLLBACK: ${id}`);
-    simStatus.logs.push("Verifying file integrity...");
+    simStatus.logs.push(`${getTimestamp()} INITIATING HISTORY ROLLBACK: ${id}`);
+    simStatus.logs.push(`${getTimestamp()} Verifying file integrity...`);
     
     await new Promise(r => setTimeout(r, 1000));
-    simStatus.logs.push("Moving files back to source...");
+    simStatus.logs.push(`${getTimestamp()} Moving files back to source...`);
     await new Promise(r => setTimeout(r, 1500));
     
-    simStatus.logs.push("Rollback successful.");
+    simStatus.logs.push(`${getTimestamp()} Rollback successful.`);
     simStatus.current_stage = PipelineStage.IDLE;
     simStatus.is_running = false;
     simStatus.proposed_changes = [];
@@ -284,29 +290,30 @@ const startSimulation = async (path: string, isAnalysis: boolean, config?: DryRu
         is_running: true,
         progress: 0,
         logs: isAnalysis 
-            ? [`[${new Date().toLocaleTimeString()}] Pipeline Initialized. Target: ${path}`] 
-            : [`[${new Date().toLocaleTimeString()}] EXECUTION STARTED. Moving files...`],
+            ? [`${getTimestamp()} Pipeline Initialized. Target: ${path}`] 
+            : [`${getTimestamp()} EXECUTION STARTED. Moving files...`],
         proposed_changes: isAnalysis ? [] : simStatus.proposed_changes,
         stats: isAnalysis ? { planned_moves: 0, skipped_files: 0, avg_confidence: 0 } : simStatus.stats,
     };
 
     if (isAnalysis && fanOut) {
-        simStatus.logs.push(`[System] Spawning ${workers} parallel workers...`);
-        simStatus.logs.push(`[System] Batch Strategy: ${batchSize} files/worker`);
+        // Ensure standard log format [HH:MM:SS] Message
+        simStatus.logs.push(`${getTimestamp()} System: Spawning ${workers} parallel workers...`);
+        simStatus.logs.push(`${getTimestamp()} System: Batch Strategy: ${batchSize} files/worker`);
     }
 
     const stages = isAnalysis 
         ? [PipelineStage.SCAN, PipelineStage.GROUP, PipelineStage.AI_DISCOVERY, PipelineStage.NORMALIZE]
         : [PipelineStage.SORT, PipelineStage.REPORT];
     
-    // Faster simulation: ~8 seconds total for analysis
-    const totalDuration = 8000;
+    // Simulation Duration: 30 seconds
+    const totalDuration = 30000;
     const stepsPerStage = 25;
     const stepDelay = (totalDuration / stages.length) / stepsPerStage; 
 
     for (const stage of stages) {
         simStatus.current_stage = stage;
-        simStatus.logs.push(`Running Stage: ${stage}`); 
+        simStatus.logs.push(`${getTimestamp()} Running Stage: ${stage}`); 
         
         for (let i = 0; i <= 100; i += (100 / stepsPerStage)) {
             simStatus.progress = i;
@@ -320,10 +327,10 @@ const startSimulation = async (path: string, isAnalysis: boolean, config?: DryRu
                     simStatus.stats.avg_confidence = 0.6 + (Math.random() * 0.39);
                     
                     // Simulate parallel worker logs
-                    if (Math.random() > 0.6) {
+                    if (Math.random() > 0.85) {
                         const workerId = Math.floor(Math.random() * workers) + 1;
                         const batchId = Math.floor(Math.random() * 500) + 1;
-                        simStatus.logs.push(`[Worker ${workerId}] Processing Batch #${batchId} (${batchSize} files)...`);
+                        simStatus.logs.push(`${getTimestamp()} Worker ${workerId}: Processing Batch #${batchId} (${batchSize} files)...`);
                     }
                  }
             }
@@ -333,13 +340,13 @@ const startSimulation = async (path: string, isAnalysis: boolean, config?: DryRu
     }
 
     if (isAnalysis) {
-        simStatus.logs.push("DRY RUN COMPLETE. Review proposed changes before execution.");
+        simStatus.logs.push(`${getTimestamp()} DRY RUN COMPLETE. Review proposed changes before execution.`);
         const newOps = generateMockOperations(path);
         simStatus.proposed_changes = newOps;
         simStatus.stats.planned_moves = newOps.length;
         simStatus.stats.avg_confidence = 0.94; 
     } else {
-        simStatus.logs.push("Sort Complete. Rollback available.");
+        simStatus.logs.push(`${getTimestamp()} Sort Complete. Rollback available.`);
         simStatus.proposed_changes = simStatus.proposed_changes?.map(op => ({...op, status: 'moved'}));
         
         saveHistoryItem({
@@ -361,10 +368,10 @@ export const triggerRollback = async (): Promise<{ message: string }> => {
         return handleResponse(res);
     } catch (e) {
         simStatus.current_stage = PipelineStage.ROLLBACK;
-        simStatus.logs = [...simStatus.logs, "!!! INITIATING ROLLBACK !!!", "Reversing file operations..."];
+        simStatus.logs = [...simStatus.logs, `${getTimestamp()} !!! INITIATING ROLLBACK !!!`, `${getTimestamp()} Reversing file operations...`];
         await new Promise(r => setTimeout(r, 1500));
         simStatus.current_stage = PipelineStage.IDLE;
-        simStatus.logs = ["Rollback successful. Library restored to original state."];
+        simStatus.logs = [`${getTimestamp()} Rollback successful. Library restored to original state.`];
         simStatus.stats = { planned_moves: 0, skipped_files: 0, avg_confidence: 0 };
         simStatus.proposed_changes = [];
         return { message: "Rollback complete" };

@@ -134,18 +134,18 @@ const DryRunConfigModal: React.FC<DryRunConfigModalProps> = ({ isOpen, onClose, 
                 </div>
 
                 {/* Footer */}
-                <div className="bg-zinc-50 dark:bg-zinc-950 p-6 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-3">
+                <div className="bg-zinc-50 dark:bg-zinc-950 px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-end gap-2 items-center">
                     <button 
                         onClick={onClose}
-                        className="px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-widest text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
+                        className="px-4 py-2 rounded-md font-bold text-[11px] uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                     >
                         Cancel
                     </button>
                     <button 
                         onClick={() => onConfirm({ batchSize, workers, smartFanOut })}
-                        className="px-8 py-3 rounded-lg font-bold text-xs uppercase tracking-widest bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/20 transition-all flex items-center gap-2"
+                        className="px-5 py-2 rounded-md font-bold text-[11px] uppercase tracking-wider bg-red-600 hover:bg-red-500 text-white shadow-md shadow-red-600/20 transition-all flex items-center gap-1.5 active:scale-95"
                     >
-                        <Play className="w-4 h-4 fill-current" /> Start Scan
+                        <Play className="w-3 h-3 fill-current" /> Start Scan
                     </button>
                 </div>
             </div>
