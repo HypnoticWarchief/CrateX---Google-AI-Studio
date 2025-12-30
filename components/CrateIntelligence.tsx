@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Bot, ShieldAlert, ShoppingCart, Music, ArrowDown, ExternalLink } from 'lucide-react';
+import { Send, Loader2, Bot, ShieldAlert, ShoppingCart, Music, ArrowDown, ExternalLink, Trash2 } from 'lucide-react';
 import { askGeminiAgent } from '../services/api';
 import { PipelineStatus } from '../types';
 
@@ -37,6 +38,11 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
         const container = containerRef.current;
         if (!container) return;
         container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        setUserHasScrolledUp(false);
+    };
+
+    const handleClear = () => {
+        setMessages([]);
         setUserHasScrolledUp(false);
     };
 
@@ -109,8 +115,15 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
                     <Bot className="w-4 h-4 text-red-500" />
                     <h3 className="font-bold text-sm text-zinc-900 dark:text-zinc-200 tracking-tight">Agentic Command</h3>
                 </div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 bg-zinc-200 dark:bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-300 dark:border-zinc-700">
-                    Auto-Pilot
+                <div className="flex items-center gap-2">
+                    {messages.length > 0 && (
+                         <button onClick={handleClear} className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-red-500 bg-transparent px-2 py-0.5 rounded transition-colors flex items-center gap-1">
+                            <Trash2 className="w-3 h-3" /> Clear
+                        </button>
+                    )}
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 bg-zinc-200 dark:bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-300 dark:border-zinc-700">
+                        Auto-Pilot
+                    </div>
                 </div>
             </div>
 

@@ -61,7 +61,6 @@ const LibraryAnalysisModal: React.FC<LibraryAnalysisModalProps> = ({ isOpen, onC
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200 font-sans">
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col">
                 
-                {/* Header */}
                 <div className="bg-zinc-50 dark:bg-zinc-950 px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center flex-shrink-0">
                     <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 bg-red-600 rounded-md flex items-center justify-center shadow-lg shadow-red-600/20">
@@ -77,44 +76,22 @@ const LibraryAnalysisModal: React.FC<LibraryAnalysisModalProps> = ({ isOpen, onC
                     </button>
                 </div>
 
-                {/* Content */}
                 {loading || !data ? (
                     <div className="flex-1 flex items-center justify-center p-12">
                         <Activity className="w-6 h-6 text-red-500 animate-pulse" />
                     </div>
                 ) : (
                     <div className="overflow-y-auto p-4 space-y-4 bg-white dark:bg-zinc-900 scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800">
-                        
-                        {/* Top Stats Row */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-                            <StatCard 
-                                label="Total Tracks" 
-                                value={data.total_tracks} 
-                                icon={<Disc className="w-5 h-5" />} 
-                            />
-                            <StatCard 
-                                label="Library Size" 
-                                value={`${data.total_size_gb} GB`} 
-                                icon={<HardDrive className="w-5 h-5" />} 
-                            />
-                            <StatCard 
-                                label="Health Score" 
-                                value={`${data.health_score}%`} 
-                                color={data.health_score > 80 ? 'text-green-500' : 'text-amber-500'}
-                                icon={<Activity className="w-5 h-5" />} 
-                            />
-                            <StatCard 
-                                label="Duplicates" 
-                                value={data.duplicates} 
-                                icon={<Layers className="w-5 h-5" />} 
-                            />
+                            <StatCard label="Total Tracks" value={data.total_tracks} icon={<Disc className="w-5 h-5" />} />
+                            <StatCard label="Library Size" value={`${data.total_size_gb} GB`} icon={<HardDrive className="w-5 h-5" />} />
+                            <StatCard label="Health Score" value={`${data.health_score}%`} color={data.health_score > 80 ? 'text-green-500' : 'text-amber-500'} icon={<Activity className="w-5 h-5" />} />
+                            <StatCard label="Duplicates" value={data.duplicates} icon={<Layers className="w-5 h-5" />} />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                            
-                            {/* Format Distribution (Left Column) */}
                             <div className="md:col-span-4 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 p-3 rounded-lg">
-                                <h3 className="flex items-center gap-2 font-extrabold text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-wider">
+                                <h3 className="flex items-center gap-2 font-black text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-widest" title="File Formats Breakdown">
                                     <FileAudio className="w-3 h-3 text-red-500" /> File Formats
                                 </h3>
                                 <div className="space-y-2">
@@ -126,9 +103,8 @@ const LibraryAnalysisModal: React.FC<LibraryAnalysisModalProps> = ({ isOpen, onC
                                 </div>
                             </div>
 
-                            {/* Genre Distribution (Middle Column) */}
                             <div className="md:col-span-4 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 p-3 rounded-lg">
-                                <h3 className="flex items-center gap-2 font-extrabold text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-wider">
+                                <h3 className="flex items-center gap-2 font-black text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-widest" title="Genre Distribution Breakdown">
                                     <BarChart className="w-3 h-3 text-red-500" /> Genre Breakdown
                                 </h3>
                                 <div className="space-y-2">
@@ -136,10 +112,7 @@ const LibraryAnalysisModal: React.FC<LibraryAnalysisModalProps> = ({ isOpen, onC
                                         <div key={genre.name} className="flex items-center gap-2" title={`${genre.name}: ${genre.percentage}%`}>
                                             <div className="w-20 text-[9px] font-bold text-zinc-500 truncate text-right">{genre.name}</div>
                                             <div className="flex-1 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                                <div 
-                                                    className="h-full bg-red-500" 
-                                                    style={{ width: `${genre.percentage}%` }}
-                                                />
+                                                <div className="h-full bg-red-500" style={{ width: `${genre.percentage}%` }} />
                                             </div>
                                             <div className="w-6 text-[8px] font-mono text-zinc-400 text-right">{genre.percentage}%</div>
                                         </div>
@@ -147,12 +120,10 @@ const LibraryAnalysisModal: React.FC<LibraryAnalysisModalProps> = ({ isOpen, onC
                                 </div>
                             </div>
 
-                            {/* Audio Quality (Right Column) */}
                             <div className="md:col-span-4 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 p-3 rounded-lg">
-                                <h3 className="flex items-center gap-2 font-extrabold text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-wider">
+                                <h3 className="flex items-center gap-2 font-black text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-widest" title="Audio Fidelity and Resolution">
                                     <Mic2 className="w-3 h-3 text-red-500" /> Audio Fidelity
                                 </h3>
-                                
                                 <div className="space-y-1.5 mb-3">
                                     {data.audio_profiles.map((profile) => (
                                         <div key={profile.name} className="flex justify-between items-center text-[9px] border-b border-zinc-200 dark:border-zinc-800 pb-1 last:border-0 last:pb-0" title={`${profile.name}: ${profile.count} tracks`}>
@@ -161,22 +132,20 @@ const LibraryAnalysisModal: React.FC<LibraryAnalysisModalProps> = ({ isOpen, onC
                                         </div>
                                     ))}
                                 </div>
-
                                 <div className="grid grid-cols-2 gap-2">
-                                    <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-center" title="Lossless Audio Percentage">
+                                    <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-center" title="Lossless / High-Res Audio Percentage">
                                         <div className="text-[10px] font-black text-green-500 truncate">{Math.round((data.quality.lossless + data.quality.high_res)/data.total_tracks * 100)}%</div>
-                                        <div className="text-[6px] text-zinc-500 font-bold uppercase mt-0.5 truncate">Lossless</div>
+                                        <div className="text-[6px] text-zinc-500 font-bold uppercase mt-0.5 truncate tracking-tighter">Lossless</div>
                                     </div>
-                                    <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-center" title="Low Resolution Audio Count">
+                                    <div className="bg-white dark:bg-zinc-900 p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-center" title="Count of Low Resolution Audio files">
                                         <div className="text-[10px] font-black text-amber-500 truncate">{data.quality.low_quality}</div>
-                                        <div className="text-[6px] text-zinc-500 font-bold uppercase mt-0.5 truncate">Low Res</div>
+                                        <div className="text-[6px] text-zinc-500 font-bold uppercase mt-0.5 truncate tracking-tighter">Low Res</div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Smart Folders */}
                             <div className="md:col-span-12">
-                                <h3 className="flex items-center gap-2 font-extrabold text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-wider">
+                                <h3 className="flex items-center gap-2 font-black text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-widest" title="AI Suggested Smart Collections">
                                     <FolderHeart className="w-3 h-3 text-red-500" /> Smart Folder Suggestions
                                 </h3>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
@@ -186,7 +155,7 @@ const LibraryAnalysisModal: React.FC<LibraryAnalysisModalProps> = ({ isOpen, onC
                                                 {getIconForSmartFolder(folder.icon)}
                                             </div>
                                             <div className="min-w-0 flex-1 flex flex-col justify-center">
-                                                <div className="font-bold text-[9px] text-zinc-900 dark:text-white leading-tight line-clamp-2">
+                                                <div className="font-bold text-[9px] text-zinc-900 dark:text-white leading-tight line-clamp-2 uppercase">
                                                     {folder.name}
                                                 </div>
                                             </div>
@@ -198,9 +167,8 @@ const LibraryAnalysisModal: React.FC<LibraryAnalysisModalProps> = ({ isOpen, onC
                                 </div>
                             </div>
 
-                            {/* Metadata Health */}
                             <div className="md:col-span-12 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 p-3 rounded-lg">
-                                <h3 className="flex items-center gap-2 font-extrabold text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-wider">
+                                <h3 className="flex items-center gap-2 font-black text-[9px] text-zinc-900 dark:text-white mb-2.5 uppercase tracking-widest" title="Missing or corrupt metadata identification">
                                     <Tags className="w-3 h-3 text-red-500" /> Metadata Health Check
                                 </h3>
                                 <div className="grid grid-cols-5 gap-2">
@@ -226,12 +194,12 @@ const MetadataCard = ({ label, value, status }: { label: string, value: number, 
         if (status === 'error') color = 'text-red-500';
         if (status === 'critical') color = 'text-red-600';
     } else if (status === 'critical') {
-        color = 'text-green-500'; // special case for corrupt = 0
+        color = 'text-green-500'; 
     }
 
     return (
-        <div className="flex flex-col justify-center p-2 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 h-16" title={`${label}: ${value} tracks`}>
-            <span className="text-[8px] uppercase font-bold text-zinc-500 leading-tight mb-1 whitespace-normal">{label}</span>
+        <div className="flex flex-col justify-center p-2 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 h-16" title={`${label}: ${value} tracks affected`}>
+            <span className="text-[8px] uppercase font-bold text-zinc-500 leading-tight mb-1 whitespace-normal tracking-tighter">{label}</span>
             <span className={`text-sm font-black ${color}`}>{value}</span>
         </div>
     );

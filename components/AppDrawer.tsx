@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, History, Settings, Disc, Sun, Moon, Activity } from 'lucide-react';
+import { X, History, Settings, Disc, Sun, Moon, Activity, Map } from 'lucide-react';
 
 interface AppDrawerProps {
     isOpen: boolean;
@@ -8,12 +8,13 @@ interface AppDrawerProps {
     onOpenSettings: () => void;
     onOpenHistory: () => void;
     onOpenExport: () => void;
+    onStartTour: () => void;
     isDarkMode: boolean;
     toggleTheme: () => void;
 }
 
 const AppDrawer: React.FC<AppDrawerProps> = ({ 
-    isOpen, onClose, onOpenSettings, onOpenHistory, onOpenExport, isDarkMode, toggleTheme 
+    isOpen, onClose, onOpenSettings, onOpenHistory, onOpenExport, onStartTour, isDarkMode, toggleTheme 
 }) => {
     return (
         <>
@@ -38,6 +39,14 @@ const AppDrawer: React.FC<AppDrawerProps> = ({
 
                     {/* Menu Items */}
                     <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
+                         <MenuItem 
+                            icon={<Map className="w-4 h-4" />}
+                            title="Interactive Tour"
+                            description="Learn the interface"
+                            onClick={onStartTour}
+                            colorClass="text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+                        />
+
                         <MenuItem 
                             icon={<History className="w-4 h-4" />}
                             title="Operation History"

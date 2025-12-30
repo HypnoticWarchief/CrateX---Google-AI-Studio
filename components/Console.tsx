@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Terminal, ArrowDown } from 'lucide-react';
 
 interface ConsoleProps {
@@ -9,6 +9,15 @@ interface ConsoleProps {
 const Console: React.FC<ConsoleProps> = ({ logs }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [userHasScrolledUp, setUserHasScrolledUp] = useState(false);
+
+    // Performance Optimization: Only render the last 200 logs to prevent DOM bloat
+    const visibleLogs = useMemo(() => {
+        const MAX_LOGS = 200;
+        if (logs.length <= MAX_LOGS) return logs;
+        return logs.slice(logs.length - MAX_LOGS);
+    }, [logs]);
+
+    const hiddenLogCount = Math.max(0, logs.length - 200);
 
     // Smart Auto-scroll
     useEffect(() => {
@@ -46,6 +55,11 @@ const Console: React.FC<ConsoleProps> = ({ logs }) => {
             <div className="bg-black/90 px-4 py-2 border-b border-green-900/30 flex items-center gap-2 select-none backdrop-blur-sm z-10">
                 <Terminal className="w-3.5 h-3.5 text-green-500" />
                 <span className="text-green-600 text-[10px] font-bold uppercase tracking-[0.2em] animate-pulse">Matrix_Terminal_v1.0</span>
+                {hiddenLogCount > 0 && (
+                    <span className="ml-auto text-[9px] text-green-800">
+                        {hiddenLogCount} lines archived
+                    </span>
+                )}
             </div>
             
             {/* CRT Scanline Effect Overlay */}
@@ -59,7 +73,8 @@ const Console: React.FC<ConsoleProps> = ({ logs }) => {
                 {logs.length === 0 && (
                     <span className="text-green-800 italic text-xs animate-pulse">_System ready. Waiting for input signal...</span>
                 )}
-                {logs.map((log, i) => (
+                
+                {visibleLogs.map((log, i) => (
                     <div key={i} className="break-words leading-tight text-xs font-mono group/line hover:bg-green-900/10 transition-colors">
                         {/* Timestamp part (dimmer) */}
                         <span className="text-green-700 font-bold mr-2 text-[10px] select-none">

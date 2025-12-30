@@ -2,15 +2,17 @@
 import React, { useState, useRef } from 'react';
 import { X, Disc, Download, Wand2, CheckCircle2, FileCode, Layers, UploadCloud, RefreshCw, FileSymlink, Database } from 'lucide-react';
 import { generateRekordboxXML, patchRekordboxXML } from '../services/api';
+import { FileOperation } from '../types';
 
 interface ExportModalProps {
     isOpen: boolean;
     onClose: () => void;
+    scanResults: FileOperation[];
 }
 
 type Tab = 'export' | 'patch';
 
-const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
+const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, scanResults }) => {
     const [tab, setTab] = useState<Tab>('export');
     const [isGenerating, setIsGenerating] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -36,7 +38,8 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
     const handleExport = async () => {
         setIsGenerating(true);
         try {
-            const xmlContent = await generateRekordboxXML("CrateX_Export", includeAIComments);
+            // Pass actual scan results to generation logic
+            const xmlContent = await generateRekordboxXML("CrateX_Export", includeAIComments, scanResults);
             downloadStringAsFile(xmlContent, `cratex_rekordbox_${new Date().getTime()}.xml`);
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
@@ -114,7 +117,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
                         <div className="space-y-6 animate-in slide-in-from-left-4 duration-200">
                             <div className="bg-zinc-100 dark:bg-zinc-950 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800">
                                 <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
-                                    Generate a clean <strong>rekordbox.xml</strong> to import as a new playlist. Best for first-time organization.
+                                    Generate a clean <strong>rekordbox.xml</strong> containing the {scanResults.length > 0 ? scanResults.length : 'scanned'} tracks. Best for first-time organization.
                                 </p>
                             </div>
 
@@ -197,11 +200,13 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
                     {tab === 'export' ? (
                         <button 
                             onClick={handleExport}
-                            disabled={isGenerating}
+                            disabled={isGenerating || (scanResults.length === 0)}
                             className={`px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg ${
                                 success 
                                 ? 'bg-green-600 text-white shadow-green-600/20' 
-                                : 'bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
+                                : (scanResults.length === 0)
+                                    ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed'
+                                    : 'bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200'
                             }`}
                         >
                             {isGenerating ? (

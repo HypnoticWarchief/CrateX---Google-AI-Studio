@@ -27,7 +27,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         setSpotifyToken(storedSpotify);
         setSavedKey(storedKey);
         setSelectedModel(storedModel);
-        setSystemKeyExists(!!process.env.API_KEY);
+        setSystemKeyExists(!!process.env.GEMINI_API_KEY);
     }, [isOpen]);
 
     const handleSave = () => {

@@ -16,7 +16,7 @@ This method packages the frontend and backend into a single container, just like
 
 1.  **Create a `.env` file:**
     ```bash
-    echo "API_KEY=your_gemini_api_key_here" > .env
+    echo "GEMINI_API_KEY=your_gemini_api_key_here" > .env
     ```
 
 2.  **Build and run the container:**
@@ -38,8 +38,8 @@ This requires running the frontend and backend in separate terminals.
 pip install -r requirements.txt
 
 # Create a .env file if you haven't already
-# The key for local python dev MUST be named API_KEY
-echo "API_KEY=your_gemini_api_key_here" > .env
+# The key for local python dev MUST be named GEMINI_API_KEY
+echo "GEMINI_API_KEY=your_gemini_api_key_here" > .env
 
 # Run the server
 uvicorn main:app --reload

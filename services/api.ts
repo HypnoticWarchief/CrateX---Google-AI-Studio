@@ -184,7 +184,7 @@ export const getLibraryAnalysis = async (): Promise<LibraryAnalysis> => {
 export const getApiKey = (): string => {
     const localKey = localStorage.getItem("cratex_api_key");
     if (localKey && localKey.trim().length > 0) return localKey;
-    return process.env.API_KEY || "";
+    return process.env.GEMINI_API_KEY || "";
 };
 
 export const getPreferredModel = (): AIModel => {
@@ -217,8 +217,10 @@ const generateMockOperations = (basePath: string): FileOperation[] => {
     const ops: FileOperation[] = [];
     const usedFilenames = new Set<string>(); // Prevent duplicates
     
-    // Generate 3000 tracks
-    for (let i = 1; i <= 3000; i++) {
+    // Generate 1500-3000 tracks
+    const total = 1500 + Math.floor(Math.random() * 1500);
+
+    for (let i = 1; i <= total; i++) {
         const mainGenres = Object.keys(genreMap);
         const mainGenre = mainGenres[Math.floor(Math.random() * mainGenres.length)];
         const subGenres = genreMap[mainGenre];
@@ -280,10 +282,16 @@ const startSimulation = async (path: string, isAnalysis: boolean, config?: DryRu
     simulationActive = true;
     currentPath = path;
     
-    // Default config if not provided
+    // Configuration affects speed
     const workers = config?.workers || 4;
     const batchSize = config?.batchSize || 20;
     const fanOut = config?.smartFanOut !== undefined ? config.smartFanOut : true;
+
+    // Faster workers = shorter duration
+    // Base duration 30s. Each worker reduces time by 1.5s, min 5s.
+    const baseDuration = 30000;
+    const speedup = (workers - 1) * 1500;
+    const actualDuration = Math.max(5000, baseDuration - speedup);
 
     simStatus = {
         ...simStatus,
@@ -306,10 +314,8 @@ const startSimulation = async (path: string, isAnalysis: boolean, config?: DryRu
         ? [PipelineStage.SCAN, PipelineStage.GROUP, PipelineStage.AI_DISCOVERY, PipelineStage.NORMALIZE]
         : [PipelineStage.SORT, PipelineStage.REPORT];
     
-    // Simulation Duration: 30 seconds
-    const totalDuration = 30000;
     const stepsPerStage = 25;
-    const stepDelay = (totalDuration / stages.length) / stepsPerStage; 
+    const stepDelay = (actualDuration / stages.length) / stepsPerStage; 
 
     for (const stage of stages) {
         simStatus.current_stage = stage;
@@ -397,7 +403,7 @@ export const resetPipeline = async (): Promise<{ message: string }> => {
 
 export const getConfig = async (): Promise<ConfigResponse> => {
     return {
-        has_gemini_key: !!process.env.API_KEY,
+        has_gemini_key: !!process.env.GEMINI_API_KEY,
         default_min_confidence: 0.75,
         cwd: currentPath,
         preferred_model: getPreferredModel()
@@ -606,20 +612,47 @@ export const generateAIComment = async (genre: string, energyLevel: string): Pro
     }
 };
 
-export const generateRekordboxXML = async (libraryName: string, includeAIComments: boolean): Promise<string> => {
+export const generateRekordboxXML = async (libraryName: string, includeAIComments: boolean, scanResults?: FileOperation[]): Promise<string> => {
     const date = new Date().toISOString();
-    let comment = "Processed by CrateX";
-    if (includeAIComments) comment = await generateAIComment("House", "High");
-
-    return `<?xml version="1.0" encoding="UTF-8"?>
+    
+    // Header
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <DJ_PLAYLISTS Version="1.0.0">
   <PRODUCT Name="rekordbox" Version="6.0.0" Company="Pioneer DJ"/>
-  <COLLECTION Entries="1">
+  <COLLECTION Entries="${scanResults ? scanResults.length : 1}">`;
+
+    if (scanResults && scanResults.length > 0) {
+        for (let i = 0; i < scanResults.length; i++) {
+            const op = scanResults[i];
+            const parts = op.filename.split(' - ');
+            const artist = parts[0] || "Unknown Artist";
+            const title = parts[1] ? parts[1].replace(/\.[^/.]+$/, "") : op.filename;
+            
+            const reasonParts = op.reason.split(':');
+            const genreInfo = reasonParts.length > 1 ? reasonParts[1].trim() : "Unknown";
+            
+            // Derive simpler metadata for XML
+            const comments = includeAIComments ? `CrateX AI: ${genreInfo}` : "CrateX Verified";
+
+            xml += `
+    <TRACK TrackID="${i + 1}" Name="${title}" Artist="${artist}" Kind="Audio File" Size="102400" TotalTime="360" DateAdded="${date}" BitRate="320" SampleRate="44100" Comments="${comments}" Location="file://localhost${op.destination.replace(/ /g, '%20')}">
+      <TEMPO Intro="0.000" Outro="0.000" Bpm="124.00"/>
+    </TRACK>`;
+        }
+    } else {
+        // Fallback default
+        let comment = "Processed by CrateX";
+        if (includeAIComments) comment = await generateAIComment("House", "High");
+        xml += `
     <TRACK TrackID="1" Name="Agentic Track" Artist="CrateX" Kind="WAV File" Size="100000" TotalTime="360" DateAdded="${date}" BitRate="1411" SampleRate="44100" Comments="${comment}" Location="file://localhost/Music/${libraryName}/track.wav">
       <TEMPO Intro="0.000" Outro="0.000" Bpm="124.00"/>
-    </TRACK>
+    </TRACK>`;
+    }
+
+    xml += `
   </COLLECTION>
 </DJ_PLAYLISTS>`;
+    return xml;
 };
 
 export const patchRekordboxXML = async (xmlString: string): Promise<string> => {
