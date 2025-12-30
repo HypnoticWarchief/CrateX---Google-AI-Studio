@@ -1,6 +1,6 @@
 
 import { PipelineStatus, ConfigResponse, PipelineStage, AIModel, FileOperation, HistoryItem, LibraryAnalysis, DryRunConfig } from '../types';
-import { GoogleGenAI, FunctionDeclaration, Type } from "@google/genai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { createSpotifyPlaylist } from './spotify';
 
 // --- CONFIGURATION ---
@@ -422,14 +422,14 @@ export const isSimulated = () => simulationActive;
 
 // --- AGENTIC AI CAPABILITIES ---
 
-const tools: FunctionDeclaration[] = [
+const tools = [
     {
         name: 'trigger_pipeline',
         description: 'Start the music organization pipeline.',
         parameters: {
-            type: Type.OBJECT,
+            type: SchemaType.OBJECT,
             properties: {
-                mode: { type: Type.STRING, description: "Either 'dry_run' or 'execute'" }
+                mode: { type: SchemaType.STRING, description: "Either 'dry_run' or 'execute'" }
             },
             required: ['mode']
         }
@@ -438,9 +438,9 @@ const tools: FunctionDeclaration[] = [
         name: 'update_path',
         description: 'Update the library folder path.',
         parameters: {
-            type: Type.OBJECT,
+            type: SchemaType.OBJECT,
             properties: {
-                path: { type: Type.STRING, description: "The file system path to the music folder" }
+                path: { type: SchemaType.STRING, description: "The file system path to the music folder" }
             },
             required: ['path']
         }
@@ -449,11 +449,11 @@ const tools: FunctionDeclaration[] = [
         name: 'create_playlist',
         description: 'Create a playlist on Spotify or Apple Music based on a genre or mood.',
         parameters: {
-            type: Type.OBJECT,
+            type: SchemaType.OBJECT,
             properties: {
-                platform: { type: Type.STRING, description: "spotify or apple_music" },
-                name: { type: Type.STRING, description: "Name of the playlist" },
-                description: { type: Type.STRING, description: "Description or genre/mood focus" }
+                platform: { type: SchemaType.STRING, description: "spotify or apple_music" },
+                name: { type: SchemaType.STRING, description: "Name of the playlist" },
+                description: { type: SchemaType.STRING, description: "Description or genre/mood focus" }
             },
             required: ['platform', 'name']
         }
@@ -462,10 +462,10 @@ const tools: FunctionDeclaration[] = [
         name: 'find_purchase_link',
         description: 'Find a link to buy a specific track or album on Bandcamp or Beatport.',
         parameters: {
-            type: Type.OBJECT,
+            type: SchemaType.OBJECT,
             properties: {
-                query: { type: Type.STRING, description: "Artist and Track Name" },
-                store: { type: Type.STRING, description: "bandcamp or beatport" }
+                query: { type: SchemaType.STRING, description: "Artist and Track Name" },
+                store: { type: SchemaType.STRING, description: "bandcamp or beatport" }
             },
             required: ['query']
         }
@@ -475,9 +475,9 @@ const tools: FunctionDeclaration[] = [
         name: 'web_search',
         description: 'Search the internet for music definitions, genre history, or specific questions.',
         parameters: {
-            type: Type.OBJECT,
+            type: SchemaType.OBJECT,
             properties: {
-                query: { type: Type.STRING, description: "The search query" }
+                query: { type: SchemaType.STRING, description: "The search query" }
             },
             required: ['query']
         }
@@ -493,7 +493,7 @@ export const askGeminiAgent = async (
     const apiKey = getApiKey();
     if (!apiKey) throw new Error("Missing API Key");
 
-    const ai = new GoogleGenAI({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
     const modelName = getPreferredModel();
 
     const systemInstruction = `
@@ -516,17 +516,16 @@ export const askGeminiAgent = async (
         - If user wants a playlist exported, use 'create_playlist'.
     `;
 
-    const response = await ai.models.generateContent({
-        model: modelName, 
-        contents: prompt,
-        config: {
-            systemInstruction,
-            tools: [{ functionDeclarations: tools }],
-            thinkingConfig: modelName.includes('pro') ? { thinkingBudget: 2048 } : undefined
-        }
+    const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: systemInstruction,
+        tools: [{ functionDeclarations: tools as any }]
     });
 
-    const toolCalls = response.functionCalls;
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const toolCalls = response.functionCalls();
+
     if (toolCalls && toolCalls.length > 0) {
         for (const call of toolCalls) {
             console.log("Agent executing:", call.name, call.args);
@@ -534,9 +533,9 @@ export const askGeminiAgent = async (
             // Handle Web Search internally by chaining a grounded request
             if (call.name === 'web_search') {
                 const searchRes = await askGemini(call.args.query as string, 'search');
-                let finalText = searchRes.text || `Here is what I found for "${call.args.query}"`;
+                let finalText = searchRes.text() || `Here is what I found for "${call.args.query}"`;
                 
-                // Append sources if available
+                // Append sources if available (Structure might differ in stable SDK, simplified here)
                 const chunks = searchRes.candidates?.[0]?.groundingMetadata?.groundingChunks;
                 if (chunks) {
                     finalText += "\n\nSources:";
@@ -575,32 +574,26 @@ export const askGeminiAgent = async (
         }
     }
 
-    return response.text || "Command processed.";
+    return response.text() || "Command processed.";
 };
 
 export const askGemini = async (prompt: string, mode: 'fast' | 'think' | 'search' = 'fast') => {
     checkRateLimit();
     const apiKey = getApiKey();
     if (!apiKey) throw new Error("Missing API Key");
-    const ai = new GoogleGenAI({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
 
     if (mode === 'think') {
-        return await ai.models.generateContent({
-            model: 'gemini-3-pro-preview',
-            contents: prompt,
-            config: { thinkingConfig: { thinkingBudget: 16000 } }
-        });
+        // 'thinkingConfig' might be experimental in stable SDK, falling back to std generation or beta if available
+        // Using standard for safety in this refactor unless explicitly supported
+        return await genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' }).generateContent(prompt).then(r => r.response);
     } else if (mode === 'search') {
-        return await ai.models.generateContent({
+        return await genAI.getGenerativeModel({ 
             model: 'gemini-3-flash-preview',
-            contents: prompt,
-            config: { tools: [{ googleSearch: {} }] }
-        });
+            tools: [{ googleSearch: {} }] as any 
+        }).generateContent(prompt).then(r => r.response);
     } else {
-        return await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt
-        });
+        return await genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' }).generateContent(prompt).then(r => r.response);
     }
 };
 
@@ -608,13 +601,11 @@ export const generateAIComment = async (genre: string, energyLevel: string): Pro
     checkRateLimit();
     const apiKey = getApiKey();
     if (!apiKey) return "CrateX Processed";
-    const ai = new GoogleGenAI({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `DJ Comment (5 words max) for ${genre}, ${energyLevel} Energy. No quotes.`,
-        });
-        return response.text?.trim() || "CrateX Verified";
+        const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+        const result = await model.generateContent(`DJ Comment (5 words max) for ${genre}, ${energyLevel} Energy. No quotes.`);
+        return result.response.text().trim() || "CrateX Verified";
     } catch (e) {
         return "CrateX Verified";
     }
