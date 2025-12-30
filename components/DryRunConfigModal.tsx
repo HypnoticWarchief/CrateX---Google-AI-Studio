@@ -73,7 +73,7 @@ const DryRunConfigModal: React.FC<DryRunConfigModalProps> = ({ isOpen, onClose, 
                             step="10" 
                             value={batchSize} 
                             onChange={(e) => setBatchSize(parseInt(e.target.value))}
-                            className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-red-600"
+                            className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-600 [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(220,38,38,0.5)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
                         />
                         <p className="text-xs text-zinc-400">Larger batches reduce API overhead but consume more memory.</p>
                     </div>
@@ -95,7 +95,7 @@ const DryRunConfigModal: React.FC<DryRunConfigModalProps> = ({ isOpen, onClose, 
                             step="1" 
                             value={workers} 
                             onChange={(e) => setWorkers(parseInt(e.target.value))}
-                            className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-red-600"
+                            className="w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-red-600 [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(220,38,38,0.5)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
                         />
                          <p className="text-xs text-zinc-400">Fan-out tagging across multiple CPU cores for speed.</p>
                     </div>

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Terminal, ArrowDown } from 'lucide-react';
+import { Terminal, ArrowDown, Maximize2, Minimize2 } from 'lucide-react';
 
 interface ConsoleProps {
     logs: string[];
@@ -9,6 +9,7 @@ interface ConsoleProps {
 const Console: React.FC<ConsoleProps> = ({ logs }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [userHasScrolledUp, setUserHasScrolledUp] = useState(false);
+    const [isMaximized, setIsMaximized] = useState(false);
 
     // Performance Optimization: Only render the last 200 logs to prevent DOM bloat
     const visibleLogs = useMemo(() => {
@@ -31,7 +32,7 @@ const Console: React.FC<ConsoleProps> = ({ logs }) => {
                 behavior: 'smooth'
             });
         }
-    }, [logs, userHasScrolledUp]);
+    }, [logs, userHasScrolledUp, isMaximized]);
 
     const handleScroll = () => {
         const container = containerRef.current;
@@ -49,17 +50,35 @@ const Console: React.FC<ConsoleProps> = ({ logs }) => {
         setUserHasScrolledUp(false);
     };
 
+    const toggleMaximize = () => {
+        setIsMaximized(!isMaximized);
+    };
+
+    const containerClasses = isMaximized 
+        ? "fixed inset-4 z-50 h-auto" 
+        : "h-96 md:h-full relative";
+
     return (
-        <div className="bg-black rounded-xl border border-green-900/50 shadow-2xl flex flex-col h-96 md:h-full font-mono text-sm overflow-hidden relative group">
+        <div className={`bg-black rounded-xl border border-green-900/50 shadow-2xl flex flex-col font-mono text-sm overflow-hidden group transition-all duration-300 ${containerClasses}`}>
+            
+            {isMaximized && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[-1]" onClick={toggleMaximize} />
+            )}
+
             {/* Header */}
             <div className="bg-black/90 px-4 py-2 border-b border-green-900/30 flex items-center gap-2 select-none backdrop-blur-sm z-10">
                 <Terminal className="w-3.5 h-3.5 text-green-500" />
                 <span className="text-green-600 text-[10px] font-bold uppercase tracking-[0.2em] animate-pulse">Matrix_Terminal_v1.0</span>
-                {hiddenLogCount > 0 && (
-                    <span className="ml-auto text-[9px] text-green-800">
-                        {hiddenLogCount} lines archived
-                    </span>
-                )}
+                <div className="ml-auto flex items-center gap-3">
+                    {hiddenLogCount > 0 && (
+                        <span className="text-[9px] text-green-800">
+                            {hiddenLogCount} lines archived
+                        </span>
+                    )}
+                    <button onClick={toggleMaximize} className="text-green-800 hover:text-green-500 transition-colors">
+                        {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                    </button>
+                </div>
             </div>
             
             {/* CRT Scanline Effect Overlay */}
@@ -108,3 +127,4 @@ const Console: React.FC<ConsoleProps> = ({ logs }) => {
 };
 
 export default Console;
+    

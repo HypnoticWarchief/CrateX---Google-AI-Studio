@@ -60,26 +60,39 @@ const Dashboard: React.FC = () => {
     const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
     const [isDryRunConfigOpen, setIsDryRunConfigOpen] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    
+    // Mobile Warning State
     const [showMobileWarning, setShowMobileWarning] = useState(false);
+    const [mobileWarningMounted, setMobileWarningMounted] = useState(false);
 
     useEffect(() => {
         getConfig().then(cfg => setPath(cfg.cwd || "/Volumes/Music/Unsorted")).catch(e => {});
         const checkScreen = () => {
-            if (window.innerWidth < 1024) setShowMobileWarning(true);
-            else setShowMobileWarning(false);
+            if (window.innerWidth < 1024) {
+                setMobileWarningMounted(true);
+                // Small delay to allow mount before showing for animation
+                setTimeout(() => setShowMobileWarning(true), 50);
+            }
         };
         checkScreen();
-        window.addEventListener('resize', checkScreen);
-        return () => window.removeEventListener('resize', checkScreen);
     }, []);
 
-    // Auto-dismiss mobile warning after 10 seconds
+    // Auto-dismiss mobile warning after 10 seconds with slide out
     useEffect(() => {
         if (showMobileWarning) {
-            const timer = setTimeout(() => setShowMobileWarning(false), 10000);
+            const timer = setTimeout(() => {
+                setShowMobileWarning(false);
+                // Unmount after animation finishes
+                setTimeout(() => setMobileWarningMounted(false), 500); 
+            }, 10000);
             return () => clearTimeout(timer);
         }
     }, [showMobileWarning]);
+
+    const handleDismissMobileWarning = () => {
+        setShowMobileWarning(false);
+        setTimeout(() => setMobileWarningMounted(false), 500);
+    };
 
     useEffect(() => {
         const fetchStatus = async () => {
@@ -93,6 +106,8 @@ const Dashboard: React.FC = () => {
                         addNotification("Library Sort Complete!", 'success');
                     } else if (data.proposed_changes && data.proposed_changes.length > 0) {
                         addNotification("Dry Run Analysis Complete", 'success');
+                        // AUTO-OPEN ANALYSIS MODAL
+                        setIsAnalysisModalOpen(true);
                     }
                     hasNotifiedRef.current = true;
                 }
@@ -195,10 +210,13 @@ const Dashboard: React.FC = () => {
     ];
 
     const MainContent = () => (
-        <div className="grid grid-cols-12 gap-6 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 shadow-xl transition-colors duration-300">
-                    <div className="mb-6">
+        <div className="grid grid-cols-12 gap-4 md:gap-6 flex-1 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-0">
+            {/* LEFT COLUMN */}
+            <div className="col-span-12 lg:col-span-8 flex flex-col gap-4 md:gap-6 min-h-0">
+                
+                {/* Control Panel - Fixed Height */}
+                <div className="flex-shrink-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 md:p-6 shadow-xl transition-colors duration-300 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-90">
+                    <div className="mb-4 md:mb-6">
                         <label className="text-xs font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2 mb-2">
                             <FolderOpen className="w-4 h-4" /> Target Library Path
                         </label>
@@ -208,22 +226,22 @@ const Dashboard: React.FC = () => {
                                 type="text" 
                                 value={path}
                                 onChange={(e) => setPath(e.target.value)}
-                                className="flex-1 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm font-mono p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                                className="flex-1 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs md:text-sm font-mono p-2.5 md:p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
                                 placeholder="/Volumes/Music/Library"
                                 disabled={isRunning}
                             />
-                            <button className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-lg font-bold text-xs uppercase tracking-wider transition-colors">
+                            <button className="px-3 md:px-4 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded-lg font-bold text-[10px] md:text-xs uppercase tracking-wider transition-colors">
                                 Browse
                             </button>
                         </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* START/ABORT LOGIC: If running, show Abort. If not running, show Start/Re-Scan */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                        {/* START/ABORT LOGIC */}
                         {isRunning ? (
                              <button 
                                 onClick={handleReset}
-                                className="w-full py-4 rounded-lg font-black text-sm uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 border-2 border-transparent hover:border-red-500 transition-all flex items-center justify-center gap-3 animate-pulse"
+                                className="w-full py-3 md:py-4 rounded-lg font-black text-xs md:text-sm uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 border-2 border-transparent hover:border-red-500 transition-all flex items-center justify-center gap-3 animate-pulse"
                             >
                                 <StopCircle className="w-5 h-5 fill-current" />
                                 Abort Operation
@@ -233,13 +251,13 @@ const Dashboard: React.FC = () => {
                                 id="tour-analyze-btn"
                                 onClick={handleAnalyzeClick}
                                 disabled={!path}
-                                className={`w-full py-4 rounded-lg font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 ${
+                                className={`w-full py-3 md:py-4 rounded-lg font-black text-xs md:text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 ${
                                     hasAnalysis 
                                     ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700' 
                                     : 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-black hover:opacity-90 shadow-lg'
                                 }`}
                             >
-                                <Play className="w-5 h-5 fill-current" />
+                                <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" />
                                 {hasAnalysis ? 'Re-Scan (Dry Run)' : 'Start Dry Run'}
                             </button>
                         )}
@@ -247,18 +265,18 @@ const Dashboard: React.FC = () => {
                         <button 
                             onClick={() => setIsReviewOpen(true)}
                             disabled={isRunning || !hasAnalysis}
-                            className={`w-full py-4 rounded-lg font-black text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 ${
+                            className={`w-full py-3 md:py-4 rounded-lg font-black text-xs md:text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 ${
                                 !hasAnalysis 
                                 ? 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-400 cursor-not-allowed opacity-50' 
                                 : 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30'
                             }`}
                         >
-                            <Zap className="w-5 h-5 fill-current" />
+                            <Zap className="w-4 h-4 md:w-5 md:h-5 fill-current" />
                             Execute Changes
                         </button>
                     </div>
                     
-                    <div className="mt-4 flex items-center justify-between text-xs font-bold text-zinc-500">
+                    <div className="mt-4 flex items-center justify-between text-[10px] md:text-xs font-bold text-zinc-500">
                         <span>
                             {isRunning ? (
                                 <span className="text-red-500 flex items-center gap-2">
@@ -277,27 +295,38 @@ const Dashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Stepper currentStage={status.current_stage} progress={status.progress} />
-                    <div className="flex flex-col gap-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                {/* Console & Stepper Grid */}
+                {/* On mobile: stack freely. On Desktop: fill remaining height */}
+                <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    {/* Stepper: Fixed height on mobile, fit on desktop */}
+                    <div className="h-64 md:h-auto min-h-0">
+                         <Stepper currentStage={status.current_stage} progress={status.progress} />
+                    </div>
+                    
+                    <div className="flex flex-col gap-4 md:gap-6 h-full min-h-0">
+                        <div className="flex-shrink-0 grid grid-cols-2 gap-3 md:gap-4">
+                            <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 backdrop-blur-sm bg-opacity-90">
                                 <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Files Scanned</h4>
-                                <div className="text-3xl font-mono font-bold text-zinc-900 dark:text-white">{status.stats.planned_moves}</div>
+                                <div className="text-2xl md:text-3xl font-mono font-bold text-zinc-900 dark:text-white">{status.stats.planned_moves}</div>
                             </div>
-                            <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                            <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 backdrop-blur-sm bg-opacity-90">
                                 <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">AI Confidence</h4>
-                                <div className="text-3xl font-mono font-bold text-red-600 dark:text-red-500">{(status.stats.avg_confidence * 100).toFixed(0)}%</div>
+                                <div className="text-2xl md:text-3xl font-mono font-bold text-red-600 dark:text-red-500">{(status.stats.avg_confidence * 100).toFixed(0)}%</div>
                             </div>
                         </div>
-                        <div className="flex-1 min-h-[250px]" id="tour-console">
+                        {/* Console: Fixed height on mobile, flex on desktop */}
+                        <div className="h-64 md:flex-1 md:min-h-0" id="tour-console">
                             <Console logs={status.logs} />
                         </div>
                     </div>
                 </div>
             </div>
-            <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-                <div className="h-full flex flex-col" id="tour-agent">
+
+            {/* RIGHT COLUMN */}
+            {/* On mobile: Stacked at bottom. On Desktop: Right Sidebar */}
+            <div className="col-span-12 lg:col-span-4 flex flex-col gap-4 md:gap-6 min-h-0">
+                {/* Chat: Fixed height on mobile so it doesn't get squashed or infinite */}
+                <div className="h-[500px] lg:h-full lg:flex-1 lg:min-h-0 flex flex-col" id="tour-agent">
                     <CrateIntelligence 
                         appStatus={status} 
                         currentPath={path}
@@ -318,7 +347,7 @@ const Dashboard: React.FC = () => {
 
                 <div 
                     onClick={() => setIsAnalysisModalOpen(true)}
-                    className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 cursor-pointer hover:border-red-500/50 dark:hover:border-red-500/50 transition-all group shadow-sm"
+                    className="flex-shrink-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 cursor-pointer hover:border-red-500/50 dark:hover:border-red-500/50 transition-all group shadow-sm backdrop-blur-sm bg-opacity-90"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
@@ -366,7 +395,7 @@ const Dashboard: React.FC = () => {
     );
 
     return (
-        <div className={`${isDarkMode ? 'dark' : ''} bg-zinc-50 dark:bg-zinc-950 min-h-screen transition-colors duration-300`}>
+        <div className={`h-[100dvh] flex flex-col overflow-hidden transition-colors duration-300 bg-background`}>
             <AppDrawer 
                 isOpen={isDrawerOpen}
                 onClose={() => setIsDrawerOpen(false)}
@@ -403,6 +432,7 @@ const Dashboard: React.FC = () => {
                 isExecuting={isRunning && status.current_stage !== PipelineStage.COMPLETED}
             />
 
+            {/* Notifications */}
             <div className="fixed top-6 right-6 z-[60] flex flex-col gap-2 pointer-events-none">
                 {notifications.map(n => (
                     <div key={n.id} className="pointer-events-auto bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-lg p-3 flex items-center gap-3 animate-in slide-in-from-right-10 fade-in duration-300">
@@ -415,24 +445,28 @@ const Dashboard: React.FC = () => {
                 ))}
             </div>
             
-            {showMobileWarning && (
-                <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50 bg-zinc-900/95 backdrop-blur-md border border-red-500/30 p-4 rounded-xl shadow-2xl flex items-start gap-4 animate-in slide-in-from-bottom-10">
+            {/* Mobile Warning - Slide Out Animation */}
+            {mobileWarningMounted && (
+                <div 
+                    className={`lg:hidden fixed bottom-4 left-4 right-4 z-50 bg-zinc-900/95 backdrop-blur-md border border-red-500/30 p-4 rounded-xl shadow-2xl flex items-start gap-4 transition-all duration-700 ease-in-out transform ${
+                        showMobileWarning ? 'translate-y-0 opacity-100' : 'translate-y-[200%] opacity-0'
+                    }`}
+                >
                     <div className="bg-red-500/10 p-2 rounded-lg flex-shrink-0"><Smartphone className="w-5 h-5 text-red-500" /></div>
                     <div className="flex-1">
                         <h4 className="text-sm font-bold text-white">Desktop Recommended</h4>
                         <p className="text-xs text-zinc-400 mt-1 leading-relaxed">CrateX is optimized for desktop file management.</p>
                     </div>
-                    <button onClick={() => setShowMobileWarning(false)} className="text-zinc-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+                    <button onClick={handleDismissMobileWarning} className="text-zinc-500 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
                 </div>
             )}
 
-            <div className="p-4 md:p-6 flex flex-col gap-6 font-sans">
+            <div className="p-4 md:p-6 flex-shrink-0 font-sans">
                 {!isCompletedAndMoved && (
-                    <header className="flex flex-row items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-colors duration-300">
+                    <header className="flex flex-row items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-colors duration-300 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-90">
                         <div className="flex items-center gap-4">
                             {/* UPDATED LOGO: Neon Red X with Glow */}
                             <div className="relative flex items-center justify-center pl-4 group select-none cursor-default w-24 h-10 overflow-visible">
-                                {/* The X - Background Layer */}
                                 <span 
                                     className="absolute left-1/2 top-1/2 text-5xl font-black italic text-red-600 dark:text-red-500 transition-all drop-shadow-[0_0_8px_rgba(220,38,38,0.6)] dark:drop-shadow-[0_0_12px_rgba(239,68,68,0.8)] opacity-90 group-hover:opacity-100" 
                                     style={{ 
@@ -442,8 +476,6 @@ const Dashboard: React.FC = () => {
                                 >
                                     X
                                 </span>
-                                
-                                {/* The CRATE - Foreground Layer */}
                                 <span className="relative z-10 text-3xl font-black tracking-tighter text-zinc-900 dark:text-white mix-blend-normal group-hover:text-zinc-800 dark:group-hover:text-zinc-200 transition-colors">
                                     CRATE
                                 </span>
@@ -503,7 +535,10 @@ const Dashboard: React.FC = () => {
                         </div>
                     </header>
                 )}
+            </div>
 
+            {/* Main Content Area - Scrollable on mobile, Fixed on Desktop */}
+            <div className="flex-1 min-h-0 px-4 md:px-6 pb-6 overflow-y-auto">
                 {isCompletedAndMoved ? (
                     <ResultsView 
                         changes={status.proposed_changes || []}

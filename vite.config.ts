@@ -9,10 +9,15 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      outDir: 'dist',
+      emptyOutDir: true,
+    },
     define: {
-      // This is critical: it replaces `process.env.GEMINI_API_KEY` in your code 
-      // with the actual value during the build process.
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      // Maps process.env.API_KEY to the build, allowing Cloud Run env vars to work.
+      // Also supports GEMINI_API_KEY for backward compatibility.
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || env.GEMINI_API_KEY),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.API_KEY)
     }
   };
 });

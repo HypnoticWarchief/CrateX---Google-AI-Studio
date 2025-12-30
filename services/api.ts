@@ -14,6 +14,9 @@ const checkRateLimit = () => {
     const userKey = localStorage.getItem("cratex_api_key");
     if (userKey && userKey.trim().length > 0) return;
 
+    // No rate limit check needed if we are using the system env key in a deployed environment
+    if (process.env.API_KEY) return;
+
     const now = Date.now();
     try {
         const raw = localStorage.getItem("cratex_rl_timestamps");
@@ -182,17 +185,22 @@ export const getLibraryAnalysis = async (): Promise<LibraryAnalysis> => {
 };
 
 export const getApiKey = (): string => {
+    // 1. Check local storage for user override
     const localKey = localStorage.getItem("cratex_api_key");
     if (localKey && localKey.trim().length > 0) return localKey;
-    return process.env.GEMINI_API_KEY || "";
+    
+    // 2. Fallback to process.env.API_KEY (Strict adherence to guidelines)
+    // Note: We access this directly as per instructions, assuming Vite replacement.
+    return process.env.API_KEY || "";
 };
 
-export const getPreferredModel = (): AIModel => {
+export const getPreferredModel = (): string => {
     const stored = localStorage.getItem("cratex_model");
     if (stored && Object.values(AIModel).includes(stored as AIModel)) {
-        return stored as AIModel;
+        return stored;
     }
-    return AIModel.FLASH_LITE;
+    // Default to a Gemini 3 model
+    return 'gemini-3-flash-preview';
 };
 
 // --- SIMULATION LOGIC ---
@@ -403,10 +411,10 @@ export const resetPipeline = async (): Promise<{ message: string }> => {
 
 export const getConfig = async (): Promise<ConfigResponse> => {
     return {
-        has_gemini_key: !!process.env.GEMINI_API_KEY,
+        has_gemini_key: !!getApiKey(),
         default_min_confidence: 0.75,
         cwd: currentPath,
-        preferred_model: getPreferredModel()
+        preferred_model: getPreferredModel() as AIModel
     };
 };
 
@@ -509,12 +517,12 @@ export const askGeminiAgent = async (
     `;
 
     const response = await ai.models.generateContent({
-        model: modelName === AIModel.FLASH_LITE ? AIModel.FLASH : modelName, 
+        model: modelName, 
         contents: prompt,
         config: {
             systemInstruction,
             tools: [{ functionDeclarations: tools }],
-            thinkingConfig: modelName === AIModel.PRO ? { thinkingBudget: 2048 } : undefined
+            thinkingConfig: modelName.includes('pro') ? { thinkingBudget: 2048 } : undefined
         }
     });
 
@@ -590,7 +598,7 @@ export const askGemini = async (prompt: string, mode: 'fast' | 'think' | 'search
         });
     } else {
         return await ai.models.generateContent({
-            model: 'gemini-2.5-flash-lite-latest',
+            model: 'gemini-3-flash-preview',
             contents: prompt
         });
     }
@@ -603,7 +611,7 @@ export const generateAIComment = async (genre: string, energyLevel: string): Pro
     const ai = new GoogleGenAI({ apiKey });
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-lite-latest',
+            model: 'gemini-3-flash-preview',
             contents: `DJ Comment (5 words max) for ${genre}, ${energyLevel} Energy. No quotes.`,
         });
         return response.text?.trim() || "CrateX Verified";
