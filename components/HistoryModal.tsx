@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { X, History, Clock, RotateCcw, AlertTriangle, CheckCircle, FileCheck, ShieldAlert } from 'lucide-react';
 import { HistoryItem } from '../types';
@@ -142,7 +141,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ isOpen, onClose }) => {
                                     {item.status === 'active' && (
                                         isExpired ? (
                                             <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                                                Rollback Expired (>24h)
+                                                Rollback Expired (&gt;24h)
                                             </div>
                                         ) : (
                                             <button 

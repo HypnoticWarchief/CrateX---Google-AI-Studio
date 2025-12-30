@@ -73,10 +73,10 @@ const Dashboard: React.FC = () => {
         return () => window.removeEventListener('resize', checkScreen);
     }, []);
 
-    // Auto-dismiss mobile warning after 8 seconds
+    // Auto-dismiss mobile warning after 10 seconds
     useEffect(() => {
         if (showMobileWarning) {
-            const timer = setTimeout(() => setShowMobileWarning(false), 8000);
+            const timer = setTimeout(() => setShowMobileWarning(false), 10000);
             return () => clearTimeout(timer);
         }
     }, [showMobileWarning]);
