@@ -222,7 +222,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
                                 <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                                     <div className="flex justify-between items-center text-xs">
                                         <span className="text-zinc-500">Version</span>
-                                        <span className="font-mono font-bold text-zinc-900 dark:text-white">v1.0.2-beta</span>
+                                        <span className="font-mono font-bold text-zinc-900 dark:text-white">v1.0</span>
                                     </div>
                                     <div className="flex justify-between items-center text-xs">
                                         <span className="text-zinc-500">Build Target</span>

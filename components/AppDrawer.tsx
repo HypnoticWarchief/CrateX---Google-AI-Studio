@@ -86,8 +86,8 @@ const AppDrawer: React.FC<AppDrawerProps> = ({
                             </div>
                          </button>
                          
-                         <div className="flex items-center justify-center gap-1.5 text-[9px] text-zinc-400 uppercase tracking-widest font-bold pt-2">
-                            <Activity className="w-2.5 h-2.5" /> CrateX v1.0.0
+                         <div className="flex items-center justify-center gap-1.5 text-[9px] text-zinc-400 tracking-widest font-bold pt-2">
+                            <Activity className="w-2.5 h-2.5" /> CrateX v1.0
                          </div>
                     </div>
                 </div>

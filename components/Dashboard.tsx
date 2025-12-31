@@ -483,7 +483,7 @@ const Dashboard: React.FC = () => {
 
                             <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 ml-4">
                                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-widest">v1.0.0</span>
+                                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-bold tracking-widest">v1.0</span>
                             </div>
                         </div>
 

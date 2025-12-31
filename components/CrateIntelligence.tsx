@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { Send, Loader2, Bot, ShieldAlert, ShoppingCart, Music, ArrowDown, ExternalLink, Trash2, BrainCircuit, Sparkles } from 'lucide-react';
+import { Send, Loader2, Sparkles, ShieldAlert, ShoppingCart, Music, ArrowDown, ExternalLink, Trash2, MessageSquare, Bot } from 'lucide-react';
 import { askGeminiAgent } from '../services/api';
 import { PipelineStatus } from '../types';
 
@@ -12,44 +12,38 @@ interface CrateIntelligenceProps {
 
 // --- ROBOT COMPONENT ---
 const CrateBot = ({ state }: { state: 'idle' | 'listening' | 'thinking' | 'speaking' }) => {
-    // Defines the eye/animation state based on prop
     return (
-        <div className={`relative w-20 h-20 transition-all duration-500 ${state === 'thinking' ? 'animate-float' : ''}`}>
+        <div className={`relative w-16 h-12 md:w-20 md:h-16 transition-all duration-500 ${state === 'thinking' ? 'animate-float' : ''} flex-shrink-0`}>
              {/* Glow Effect behind robot */}
-             <div className={`absolute inset-0 bg-red-500 rounded-full blur-xl opacity-0 transition-opacity duration-500 ${state === 'thinking' || state === 'speaking' ? 'opacity-40 animate-pulse' : ''}`} />
+             <div className={`absolute inset-0 bg-red-500 rounded-2xl blur-xl opacity-0 transition-opacity duration-500 ${state === 'thinking' || state === 'speaking' ? 'opacity-20 animate-pulse' : ''}`} />
              
              {/* Main Head */}
-             <div className="relative w-full h-full bg-zinc-900 dark:bg-black rounded-2xl border-2 border-zinc-700 dark:border-zinc-800 shadow-xl overflow-hidden flex items-center justify-center">
+             <div className="relative w-full h-full bg-zinc-900 dark:bg-black rounded-xl border-2 border-zinc-700 dark:border-zinc-800 shadow-xl overflow-hidden flex items-center justify-center">
                 {/* Screen Grid Overlay */}
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:4px_4px] opacity-50 z-10 pointer-events-none" />
 
                 {/* Eyes Container */}
-                <div className={`flex gap-3 transition-all duration-300 z-20 ${state === 'listening' ? 'scale-110' : ''}`}>
+                <div className={`flex gap-2 transition-all duration-300 z-20 ${state === 'listening' ? 'scale-110 gap-3' : ''}`}>
                     {state === 'thinking' ? (
-                        // Loading Animation (Cyclon/Knight Rider style single eye)
-                        <div className="w-12 h-2 bg-zinc-800 rounded-full overflow-hidden relative">
-                             <div className="absolute top-0 bottom-0 left-0 w-4 bg-red-500 rounded-full animate-[ping_1s_ease-in-out_infinite_alternate]" style={{ animationName: 'scan', animationDuration: '0.8s', animationIterationCount: 'infinite', animationDirection: 'alternate' }} />
-                             <style>{`@keyframes scan { from { left: 0; } to { left: calc(100% - 16px); } }`}</style>
+                        // Loading Animation (Scanner)
+                        <div className="w-10 h-1.5 bg-zinc-800 rounded-full overflow-hidden relative">
+                             <div className="absolute top-0 bottom-0 left-0 w-3 bg-red-500 rounded-full" style={{ animation: 'scan 0.8s infinite alternate' }} />
+                             <style>{`@keyframes scan { from { left: 0; } to { left: calc(100% - 12px); } }`}</style>
                         </div>
                     ) : (
                         // Standard Eyes
                         <>
-                            <div className={`w-3 h-5 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.8)] transition-all duration-300 ${state === 'listening' ? 'h-6' : state === 'speaking' ? 'h-2 animate-bounce' : 'h-5'}`} />
-                            <div className={`w-3 h-5 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.8)] transition-all duration-300 ${state === 'listening' ? 'h-6' : state === 'speaking' ? 'h-2 animate-bounce' : 'h-5'}`} style={{ animationDelay: '0.1s' }} />
+                            <div className={`w-2.5 h-3 md:w-3 md:h-4 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)] transition-all duration-300 ${state === 'speaking' ? 'h-2 animate-bounce' : 'h-3 md:h-4'}`} />
+                            <div className={`w-2.5 h-3 md:w-3 md:h-4 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)] transition-all duration-300 ${state === 'speaking' ? 'h-2 animate-bounce' : 'h-3 md:h-4'}`} style={{ animationDelay: '0.1s' }} />
                         </>
                     )}
                 </div>
-
-                {/* Mouth Line (Visible only when speaking or idle) */}
-                {state !== 'thinking' && (
-                     <div className={`absolute bottom-5 w-6 h-0.5 bg-zinc-600 rounded-full transition-all duration-300 ${state === 'speaking' ? 'w-8 bg-red-500 animate-pulse' : 'w-4'}`} />
-                )}
              </div>
 
              {/* Antenna */}
-             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
-                 <div className={`w-2 h-2 rounded-full ${state === 'idle' ? 'bg-zinc-500' : 'bg-red-500 animate-ping'}`} />
-                 <div className="w-0.5 h-2 bg-zinc-600" />
+             <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+                 <div className={`w-1.5 h-1.5 rounded-full ${state === 'idle' ? 'bg-zinc-500' : 'bg-red-500 animate-ping'}`} />
+                 <div className="w-0.5 h-1.5 bg-zinc-600" />
              </div>
         </div>
     );
@@ -58,8 +52,10 @@ const CrateBot = ({ state }: { state: 'idle' | 'listening' | 'thinking' | 'speak
 const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, currentPath, onRunCommand }) => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [botState, setBotState] = useState<'idle' | 'listening' | 'thinking' | 'speaking'>('idle');
     const [messages, setMessages] = useState<{role: 'user' | 'ai' | 'error', text: string, type?: 'text' | 'link' | 'playlist', meta?: any}[]>([]);
+    
+    // Robot State
+    const [botState, setBotState] = useState<'idle' | 'listening' | 'thinking' | 'speaking'>('idle');
     
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -88,6 +84,21 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
         }
     }, [messages, loading]); // Depend on messages/loading to re-evaluate height
 
+    // Bot State Logic
+    useEffect(() => {
+        if (loading) {
+            setBotState('thinking');
+        } else if (input.length > 0) {
+            setBotState('listening');
+        } else if (messages.length > 0 && messages[messages.length - 1].role === 'ai') {
+            setBotState('speaking');
+            const t = setTimeout(() => setBotState('idle'), 2000);
+            return () => clearTimeout(t);
+        } else {
+            setBotState('idle');
+        }
+    }, [input, loading, messages]);
+
     const handleScroll = () => {
         const container = containerRef.current;
         if (!container) return;
@@ -109,21 +120,6 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
             setShowScrollButton(true);
         }
     };
-
-    // Bot State Logic
-    useEffect(() => {
-        if (loading) {
-            setBotState('thinking');
-        } else if (input.length > 0) {
-            setBotState('listening');
-        } else if (messages.length > 0 && messages[messages.length - 1].role === 'ai') {
-            setBotState('speaking');
-            const t = setTimeout(() => setBotState('idle'), 2000);
-            return () => clearTimeout(t);
-        } else {
-            setBotState('idle');
-        }
-    }, [input, loading, messages]);
 
     const handleClear = () => {
         setMessages([]);
@@ -196,9 +192,7 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
             {/* Header / Bot Area */}
             <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950/50 backdrop-blur-sm relative z-10">
                 <div className="flex items-center gap-4">
-                    <div className="transform scale-75 origin-left">
-                        <CrateBot state={botState} />
-                    </div>
+                    <CrateBot state={botState} />
                     <div>
                         <h3 className="font-black text-sm text-zinc-900 dark:text-zinc-100 tracking-tight uppercase">CrateBot</h3>
                         <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
@@ -213,10 +207,6 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
                             <Trash2 className="w-3 h-3" /> Clear
                         </button>
                     )}
-                    <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 px-2 py-1 rounded border border-zinc-200 dark:border-zinc-700">
-                         <BrainCircuit className="w-3 h-3 text-purple-500" />
-                         Agentic
-                    </div>
                 </div>
             </div>
 
@@ -233,7 +223,7 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
                 {messages.length === 0 && (
                     <div className="flex flex-col items-center justify-center h-full text-center py-12 px-6 animate-in fade-in zoom-in duration-500 z-0">
                         <div className="bg-white dark:bg-zinc-800/30 p-4 rounded-full border border-zinc-100 dark:border-zinc-700/50 mb-4 shadow-sm">
-                            <Sparkles className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
+                            <MessageSquare className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
                         </div>
                         <p className="text-zinc-900 dark:text-white font-bold text-sm">Awaiting Command</p>
                         <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-2 leading-relaxed max-w-[240px] mx-auto">
@@ -295,7 +285,7 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
                 {loading && (
                     <div className="flex justify-start animate-in fade-in">
                         <div className="bg-white dark:bg-zinc-800 px-4 py-3 rounded-2xl rounded-bl-sm border border-zinc-200 dark:border-zinc-700 flex items-center gap-3 shadow-sm">
-                            <Loader2 className="w-3.5 h-3.5 text-red-500 animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 text-zinc-400 animate-spin" />
                             <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Processing...</span>
                         </div>
                     </div>
@@ -318,7 +308,7 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
             {/* Input Area */}
             <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/80 relative z-20 flex-shrink-0">
                 <div className="relative group/input">
-                    <div className="absolute inset-0 bg-red-500/5 rounded-xl opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
+                    <div className="absolute inset-0 bg-zinc-500/5 rounded-xl opacity-0 group-focus-within/input:opacity-100 transition-opacity pointer-events-none" />
                     <input 
                         ref={inputRef}
                         type="text"
@@ -326,12 +316,12 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                         placeholder="Type a command..."
-                        className="w-full bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-300 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 pl-4 pr-12 py-3.5 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-red-500/50 focus:border-red-500/50 placeholder:text-zinc-400 transition-all"
+                        className="w-full bg-zinc-100 dark:bg-zinc-900/50 border border-zinc-300 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200 pl-4 pr-12 py-3.5 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-zinc-500/50 focus:border-zinc-500/50 placeholder:text-zinc-400 transition-all"
                     />
                     <button 
                         onClick={handleSend}
                         disabled={loading || !input.trim()}
-                        className="absolute right-2 top-2 bottom-2 aspect-square flex items-center justify-center bg-zinc-200 dark:bg-zinc-800 hover:bg-red-500 hover:text-white text-zinc-500 rounded-lg transition-all disabled:opacity-50 disabled:hover:bg-zinc-200 disabled:hover:text-zinc-500"
+                        className="absolute right-2 top-2 bottom-2 aspect-square flex items-center justify-center bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-900 dark:hover:bg-white hover:text-white dark:hover:text-black text-zinc-500 rounded-lg transition-all disabled:opacity-50 disabled:hover:bg-zinc-200 disabled:hover:text-zinc-500"
                     >
                         <Send className="w-4 h-4" />
                     </button>

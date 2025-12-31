@@ -68,7 +68,7 @@ const Console: React.FC<ConsoleProps> = ({ logs }) => {
             {/* Header */}
             <div className="bg-black/90 px-4 py-2 border-b border-green-900/30 flex items-center gap-2 select-none backdrop-blur-sm z-10">
                 <Terminal className="w-3.5 h-3.5 text-green-500" />
-                <span className="text-green-600 text-[10px] font-bold uppercase tracking-[0.2em] animate-pulse">Matrix_Terminal_v1.0</span>
+                <span className="text-green-600 text-[10px] font-bold tracking-[0.2em] animate-pulse">Matrix_Terminal_v1.0</span>
                 <div className="ml-auto flex items-center gap-3">
                     {hiddenLogCount > 0 && (
                         <span className="text-[9px] text-green-800">
@@ -127,4 +127,3 @@ const Console: React.FC<ConsoleProps> = ({ logs }) => {
 };
 
 export default Console;
-    

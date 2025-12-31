@@ -107,6 +107,12 @@ export const rollbackHistoryId = async (id: string): Promise<void> => {
 
 // --- API HELPERS ---
 const handleResponse = async (res: Response) => {
+    // Check for HTML responses (common with Nginx SPA fallback for API 404s)
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("text/html")) {
+        throw new Error("Backend unavailable (HTML response)");
+    }
+
     if (!res.ok) {
         let message = "An error occurred";
         try {
@@ -119,6 +125,15 @@ const handleResponse = async (res: Response) => {
 };
 
 export const getStatus = async (): Promise<PipelineStatus> => {
+    // CRITICAL FIX: If we are currently running a simulation, prioritize it.
+    if (simulationActive && simStatus.is_running) {
+        return { 
+            ...simStatus,
+            logs: [...simStatus.logs],
+            stats: { ...simStatus.stats }
+        };
+    }
+
     try {
         const res = await fetch(`${API_URL}/status`);
         const data = await handleResponse(res);
@@ -127,9 +142,6 @@ export const getStatus = async (): Promise<PipelineStatus> => {
     } catch (e) {
         simulationActive = true;
         // IMPORTANT: Return deep copies of nested objects/arrays.
-        // React's shallow comparison in useEffect/setState will fail to detect changes
-        // if we return the same array reference for 'logs', causing the UI to freeze
-        // even though the simulation loop is updating the data in the background.
         return { 
             ...simStatus,
             logs: [...simStatus.logs],
@@ -197,8 +209,7 @@ export const getApiKey = (): string => {
     const localKey = localStorage.getItem("cratex_api_key");
     if (localKey && localKey.trim().length > 0) return localKey;
     
-    // 2. Fallback to process.env.API_KEY (Strict adherence to guidelines)
-    // Note: We access this directly as per instructions, assuming Vite replacement.
+    // 2. Fallback to process.env.API_KEY
     return process.env.API_KEY || "";
 };
 
@@ -278,8 +289,9 @@ export const runAnalysis = async (path: string, config?: DryRunConfig): Promise<
         });
         return handleResponse(res);
     } catch (e) {
+        console.warn("Backend analysis failed, falling back to simulation:", e);
         if (!simStatus.is_running) startSimulation(path, true, config);
-        return { message: "Starting library analysis..." };
+        return { message: "Starting library analysis (Simulation Mode)..." };
     }
 };
 
