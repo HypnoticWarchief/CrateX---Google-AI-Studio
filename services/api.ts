@@ -126,7 +126,15 @@ export const getStatus = async (): Promise<PipelineStatus> => {
         return data;
     } catch (e) {
         simulationActive = true;
-        return simStatus;
+        // IMPORTANT: Return deep copies of nested objects/arrays.
+        // React's shallow comparison in useEffect/setState will fail to detect changes
+        // if we return the same array reference for 'logs', causing the UI to freeze
+        // even though the simulation loop is updating the data in the background.
+        return { 
+            ...simStatus,
+            logs: [...simStatus.logs],
+            stats: { ...simStatus.stats }
+        };
     }
 };
 

@@ -1,6 +1,6 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Bot, ShieldAlert, ShoppingCart, Music, ArrowDown, ExternalLink, Trash2, Zap, BrainCircuit, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { Send, Loader2, Bot, ShieldAlert, ShoppingCart, Music, ArrowDown, ExternalLink, Trash2, BrainCircuit, Sparkles } from 'lucide-react';
 import { askGeminiAgent } from '../services/api';
 import { PipelineStatus } from '../types';
 
@@ -63,16 +63,52 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
     
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const [userHasScrolledUp, setUserHasScrolledUp] = useState(false);
+    const [showScrollButton, setShowScrollButton] = useState(false);
+    const isAtBottomRef = useRef(true); // Track if user is at bottom (independent of state to avoid re-render loops)
 
-    // Smart Auto-scroll logic
-    useEffect(() => {
+    const scrollToBottom = (behavior: ScrollBehavior = 'auto') => {
         const container = containerRef.current;
         if (!container) return;
-        if (!userHasScrolledUp) {
-            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        
+        container.scrollTo({
+            top: container.scrollHeight,
+            behavior: behavior
+        });
+        
+        // After programmatically scrolling, we assume we are at bottom
+        isAtBottomRef.current = true;
+        setShowScrollButton(false);
+    };
+
+    // Auto-scroll logic triggered by content updates
+    useLayoutEffect(() => {
+        // If the user was already at the bottom (or close to it), stick to bottom
+        if (isAtBottomRef.current) {
+            scrollToBottom('auto'); // 'auto' is instant, preventing wobble
         }
-    }, [messages, userHasScrolledUp, loading]);
+    }, [messages, loading]); // Depend on messages/loading to re-evaluate height
+
+    const handleScroll = () => {
+        const container = containerRef.current;
+        if (!container) return;
+        
+        const { scrollTop, scrollHeight, clientHeight } = container;
+        // Check distance from bottom
+        const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+        const threshold = 100; // px tolerance
+        
+        const isNearBottom = distanceToBottom < threshold;
+        
+        // Update ref (no re-render)
+        isAtBottomRef.current = isNearBottom;
+        
+        // Update state (triggers re-render for button visibility)
+        if (isNearBottom && showScrollButton) {
+            setShowScrollButton(false);
+        } else if (!isNearBottom && !showScrollButton) {
+            setShowScrollButton(true);
+        }
+    };
 
     // Bot State Logic
     useEffect(() => {
@@ -81,7 +117,6 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
         } else if (input.length > 0) {
             setBotState('listening');
         } else if (messages.length > 0 && messages[messages.length - 1].role === 'ai') {
-            // Briefly show speaking state after response
             setBotState('speaking');
             const t = setTimeout(() => setBotState('idle'), 2000);
             return () => clearTimeout(t);
@@ -90,23 +125,10 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
         }
     }, [input, loading, messages]);
 
-    const handleScroll = () => {
-        const container = containerRef.current;
-        if (!container) return;
-        const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
-        setUserHasScrolledUp(!isAtBottom);
-    };
-
-    const scrollToBottom = () => {
-        const container = containerRef.current;
-        if (!container) return;
-        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-        setUserHasScrolledUp(false);
-    };
-
     const handleClear = () => {
         setMessages([]);
-        setUserHasScrolledUp(false);
+        isAtBottomRef.current = true;
+        setShowScrollButton(false);
     };
 
     const handleSend = async () => {
@@ -116,23 +138,22 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
         setInput('');
         setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
         setLoading(true);
-        setUserHasScrolledUp(false); // Force scroll on new message
+        
+        // Force scroll to bottom on user send
+        setTimeout(() => scrollToBottom('smooth'), 10);
 
         try {
-            // Context to pass to Agent
             const context = {
                 path: currentPath || "/Unknown/Path",
                 status: appStatus || { is_running: false, stats: {} }
             };
 
             const responseText = await askGeminiAgent(userMsg, context, (action, params) => {
-                // Agent Logic Dispatcher
                 if (action === 'trigger_pipeline') {
                      if (onRunCommand) onRunCommand('start_pipeline', params);
                 } else if (action === 'update_path') {
                      if (onRunCommand) onRunCommand('set_path', params);
                 } else if (action === 'find_purchase_link') {
-                     // Add a special message type for links
                      setMessages(prev => [...prev, {
                          role: 'ai',
                          text: `Found "${params.query}" on ${params.store || 'Bandcamp'}.`,
@@ -149,8 +170,6 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
                 }
             });
             
-            // Only add text response if it wasn't intercepted by a special action type that adds its own message
-            // or if the text is substantial
             if (responseText && !responseText.includes("Executing")) {
                  setMessages(prev => [...prev, { 
                     role: 'ai', 
@@ -206,6 +225,7 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
                 ref={containerRef}
                 onScroll={handleScroll}
                 className="flex-1 overflow-y-auto p-4 space-y-6 bg-zinc-50/50 dark:bg-zinc-900 scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800 relative min-h-0"
+                style={{ overflowAnchor: 'none' }} // Prevents browser scroll anchoring interference
             >
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#3f3f46_1px,transparent_1px)] [background-size:16px_16px]" />
@@ -284,10 +304,10 @@ const CrateIntelligence: React.FC<CrateIntelligenceProps> = ({ appStatus, curren
             </div>
 
             {/* Scroll Down Button */}
-            {userHasScrolledUp && (
+            {showScrollButton && (
                 <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-20">
                      <button 
-                        onClick={scrollToBottom}
+                        onClick={() => scrollToBottom('smooth')}
                         className="bg-zinc-900/90 dark:bg-zinc-800/90 text-white backdrop-blur-sm px-3 py-1.5 rounded-full shadow-xl border border-zinc-700 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 hover:scale-105 transition-transform"
                     >
                         <ArrowDown className="w-3 h-3" /> New Messages
